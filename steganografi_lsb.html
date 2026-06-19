@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Steganografi LSB Dimodifikasi — Sherly Angelina Zalukhu</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg: #0b0d12;
+    --panel: #12151c;
+    --panel-2: #171b24;
+    --border: #242938;
+    --text: #e8eaf0;
+    --text-dim: #8b91a3;
+    --accent: #7df9c4;
+    --accent-dim: #2a4a3d;
+    --accent-2: #ff8c5a;
+    --danger: #ff5d6c;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Space Grotesk', sans-serif;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height:100vh;
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(125,249,196,0.05), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(255,140,90,0.04), transparent 40%);
+  }
+
+  .wrap{ max-width: 1100px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  /* ───── Header ───── */
+  header{ margin-bottom: 36px; }
+  .eyebrow{
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em;
+    color: var(--accent); text-transform: uppercase; margin-bottom: 10px;
+    display:flex; align-items:center; gap: 8px;
+  }
+  .eyebrow::before{ content:''; width:6px; height:6px; background: var(--accent); border-radius:50%; box-shadow: 0 0 8px var(--accent); }
+  h1{
+    font-size: clamp(28px, 4vw, 40px); font-weight: 700; line-height: 1.1;
+    letter-spacing: -0.02em; margin-bottom: 10px;
+  }
+  .subtitle{ color: var(--text-dim); font-size: 14px; font-family: var(--mono); }
+  .subtitle b{ color: var(--text); font-weight: 500; }
+
+  /* ───── Tabs ───── */
+  .tabs{ display:flex; gap: 4px; margin: 28px 0 24px; border-bottom: 1px solid var(--border); }
+  .tab{
+    font-family: var(--mono); font-size: 13px; letter-spacing: 0.03em;
+    padding: 12px 20px; cursor: pointer; color: var(--text-dim);
+    border-bottom: 2px solid transparent; transition: all 0.15s ease;
+    background:none; border-top:none; border-left:none; border-right:none;
+  }
+  .tab:hover{ color: var(--text); }
+  .tab.active{ color: var(--accent); border-bottom-color: var(--accent); }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
+
+  /* ───── Cards ───── */
+  .card{
+    background: var(--panel); border:1px solid var(--border); border-radius: 14px;
+    padding: 24px; margin-bottom: 20px;
+  }
+  .card-title{
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-dim); margin-bottom: 16px;
+    display:flex; align-items:center; justify-content: space-between;
+  }
+  .card-title .num{ color: var(--accent); }
+
+  /* ───── Dropzone ───── */
+  .dropzone{
+    border: 1.5px dashed var(--border); border-radius: 12px; padding: 32px 20px;
+    text-align: center; cursor: pointer; transition: all 0.2s ease;
+    background: var(--panel-2);
+  }
+  .dropzone:hover, .dropzone.dragover{ border-color: var(--accent); background: rgba(125,249,196,0.04); }
+  .dropzone-icon{ font-size: 28px; margin-bottom: 10px; opacity: 0.6; }
+  .dropzone-text{ font-size: 13px; color: var(--text-dim); }
+  .dropzone-text b{ color: var(--accent); }
+  .dropzone input[type=file]{ display:none; }
+
+  .preview-row{ display:flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; }
+  .preview-box{ flex: 1; min-width: 180px; }
+  .preview-box img{
+    width:100%; height: 160px; object-fit: cover; border-radius: 8px;
+    border: 1px solid var(--border); background: #000;
+  }
+  .preview-label{ font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-top: 6px; }
+
+  /* ───── Form elements ───── */
+  label.field-label{
+    display:block; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--text-dim); margin: 18px 0 8px;
+  }
+  textarea, input[type=text], input[type=number]{
+    width: 100%; background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px; color: var(--text);
+    font-family: var(--mono); font-size: 13px; resize: vertical;
+    transition: border-color 0.15s ease;
+  }
+  textarea:focus, input:focus{ outline:none; border-color: var(--accent); }
+  textarea{ min-height: 80px; }
+
+  .hint{ font-size: 11px; color: var(--text-dim); margin-top: 6px; font-family: var(--mono); }
+  .char-count{ float:right; }
+
+  /* ───── Buttons ───── */
+  button.btn{
+    font-family: var(--mono); font-size: 13px; font-weight: 500; letter-spacing: 0.03em;
+    padding: 13px 24px; border-radius: 8px; border: none; cursor: pointer;
+    transition: all 0.15s ease; margin-top: 20px;
+  }
+  .btn-primary{ background: var(--accent); color: #0b0d12; }
+  .btn-primary:hover{ background: #8ffcd1; transform: translateY(-1px); }
+  .btn-primary:disabled{ background: #2a3a35; color: #5a6a62; cursor: not-allowed; transform:none; }
+  .btn-secondary{ background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover{ border-color: var(--accent); color: var(--accent); }
+
+  /* ───── Result panel ───── */
+  .result{ margin-top: 24px; display:none; }
+  .result.show{ display:block; animation: fadeIn 0.3s ease; }
+
+  .metric-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 12px; margin: 16px 0; }
+  .metric{
+    background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .metric-label{ font-family: var(--mono); font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .metric-value{ font-family: var(--mono); font-size: 20px; font-weight: 700; color: var(--accent); }
+  .metric-value.warn{ color: var(--accent-2); }
+  .metric-value.bad{ color: var(--danger); }
+
+  .badge{
+    display:inline-flex; align-items:center; gap:6px; font-family: var(--mono); font-size: 11px;
+    padding: 5px 12px; border-radius: 100px; font-weight: 500;
+  }
+  .badge-ok{ background: rgba(125,249,196,0.12); color: var(--accent); }
+  .badge-bad{ background: rgba(255,93,108,0.12); color: var(--danger); }
+
+  .comparison-grid{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .comparison-grid .box{ text-align:center; }
+  .comparison-grid img, .comparison-grid canvas{
+    width:100%; border-radius: 8px; border: 1px solid var(--border); background:#000;
+  }
+  .comparison-grid .lbl{ font-family: var(--mono); font-size: 10px; color: var(--text-dim); margin-top: 6px; }
+
+  @media (max-width: 640px){
+    .comparison-grid{ grid-template-columns: 1fr; }
+  }
+
+  .download-row{ display:flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+  .extracted-box{
+    background: var(--panel-2); border: 1px solid var(--accent-dim); border-radius: 10px;
+    padding: 16px; margin-top: 12px; font-family: var(--mono); font-size: 14px;
+    color: var(--accent); word-break: break-word; white-space: pre-wrap;
+  }
+
+  .info-box{
+    background: rgba(125,249,196,0.04); border: 1px solid var(--accent-dim);
+    border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;
+    font-size: 12px; color: var(--text-dim); line-height: 1.6;
+  }
+  .info-box b{ color: var(--accent); }
+
+  .error-box{
+    background: rgba(255,93,108,0.08); border: 1px solid rgba(255,93,108,0.3);
+    border-radius: 10px; padding: 14px 16px; margin-top: 12px;
+    font-size: 13px; color: var(--danger); font-family: var(--mono);
+  }
+
+  /* footer */
+  footer{ margin-top: 50px; padding-top: 20px; border-top: 1px solid var(--border);
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim); text-align:center; }
+
+  /* spinner */
+  .spinner{ display:inline-block; width:14px; height:14px; border:2px solid rgba(11,13,18,0.3);
+    border-top-color:#0b0d12; border-radius:50%; animation:spin 0.6s linear infinite; vertical-align:middle; margin-right:6px;}
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Tugas 2 · Steganografi</div>
+    <h1>Steganography</h1>
+    <div class="subtitle"><b>Sherly Angelina Zalukhu</b> · NIM 231112721 </div>
+  </header>
+
+  <div class="info-box">
+    <b>Metode LSB Dimodifikasi:</b> bit pesan disisipkan ke channel <b>Merah (R)</b> untuk piksel ganjil dan channel <b>Biru (B)</b> untuk piksel genap.
+    Urutan piksel diacak menggunakan <b>kunci numerik</b> sehingga tidak berurutan linear. Delimiter <code>END</code> menandai akhir pesan.
+    Kualitas diukur dengan <b>PSNR</b> (Peak Signal-to-Noise Ratio).
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="embed">① Embedding</button>
+    <button class="tab" data-tab="extract">② Extraction</button>
+  </div>
+
+  <!-- ═══════════════ EMBED PANEL ═══════════════ -->
+  <div class="panel active" id="panel-embed">
+
+    <div class="card">
+      <div class="card-title"><span><span class="num">01</span> &nbsp;Gambar Cover</span></div>
+      <div class="dropzone" id="dropzone-cover">
+        <input type="file" id="fileCover" accept="image/png,image/jpeg,image/bmp">
+        <div class="dropzone-icon">📁</div>
+        <div class="dropzone-text">Klik atau seret gambar ke sini &nbsp;<b>(min. 250×250 px)</b><br>atau gunakan gambar contoh di bawah</div>
+      </div>
+      <button class="btn btn-secondary" id="btnSampleImg" style="margin-top:12px;">Gunakan gambar contoh (gradien 300×300)</button>
+      <div class="preview-row" id="coverPreviewRow" style="display:none;">
+        <div class="preview-box">
+          <img id="coverPreview" src="">
+          <div class="preview-label" id="coverInfo">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span><span class="num">02</span> &nbsp;Pesan Rahasia &amp; Kunci</span></div>
+      <label class="field-label">Pesan yang akan disisipkan</label>
+      <textarea id="msgInput" placeholder="Contoh: Sherly Angelina Zalukhu231112721"></textarea>
+      <div class="hint"><span id="bitCount">0 bit</span> <span class="char-count" id="capacityHint"></span></div>
+
+      <label class="field-label">Kunci numerik (untuk mengacak urutan piksel)</label>
+      <input type="number" id="keyInput" placeholder="Contoh: 231112721" value="231112721">
+      <div class="hint">Gunakan kunci yang SAMA saat proses extraction nanti.</div>
+
+      <button class="btn btn-primary" id="btnEmbed" disabled>🔒 Sisipkan Pesan</button>
+      <div id="embedError"></div>
+    </div>
+
+    <div class="result" id="embedResult">
+      <div class="card">
+        <div class="card-title">Hasil Embedding</div>
+        <div class="metric-grid">
+          <div class="metric">
+            <div class="metric-label">PSNR Total</div>
+            <div class="metric-value" id="psnrTotal">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">PSNR Channel R</div>
+            <div class="metric-value" id="psnrR">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">PSNR Channel G</div>
+            <div class="metric-value" id="psnrG">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">PSNR Channel B</div>
+            <div class="metric-value" id="psnrB">—</div>
+          </div>
+        </div>
+        <div id="psnrVerdict"></div>
+
+        <div class="comparison-grid">
+          <div class="box">
+            <canvas id="canvasOrig"></canvas>
+            <div class="lbl">Original</div>
+          </div>
+          <div class="box">
+            <canvas id="canvasStego"></canvas>
+            <div class="lbl">Stego</div>
+          </div>
+          <div class="box">
+            <canvas id="canvasDiff"></canvas>
+            <div class="lbl">Perbedaan (×50, diperbesar)</div>
+          </div>
+        </div>
+
+        <div class="download-row">
+          <button class="btn btn-primary" id="btnDownloadStego">⬇ Unduh Gambar Stego (.png)</button>
+          <button class="btn btn-secondary" id="btnDownloadComparison">⬇ Unduh Perbandingan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ EXTRACT PANEL ═══════════════ -->
+  <div class="panel" id="panel-extract">
+    <div class="card">
+      <div class="card-title"><span><span class="num">01</span> &nbsp;Gambar Stego</span></div>
+      <div class="dropzone" id="dropzone-stego">
+        <input type="file" id="fileStego" accept="image/png,image/bmp">
+        <div class="dropzone-icon">🖼️</div>
+        <div class="dropzone-text">Klik atau seret gambar stego (.png) ke sini<br><span style="color:var(--accent-2)">⚠ Harus format PNG/BMP — JPG/WebP merusak bit LSB</span></div>
+      </div>
+      <div class="preview-row" id="stegoPreviewRow" style="display:none;">
+        <div class="preview-box">
+          <img id="stegoPreview" src="">
+          <div class="preview-label" id="stegoInfo">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span><span class="num">02</span> &nbsp;Kunci</span></div>
+      <label class="field-label">Kunci numerik (sama seperti saat embedding)</label>
+      <input type="number" id="keyInputExtract" placeholder="Contoh: 231112721" value="231112721">
+
+      <button class="btn btn-primary" id="btnExtract" disabled>🔓 Ekstrak Pesan</button>
+      <div id="extractError"></div>
+    </div>
+
+    <div class="result" id="extractResult">
+      <div class="card">
+        <div class="card-title">Pesan yang Diekstrak</div>
+        <div class="extracted-box" id="extractedMsg">—</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    LSB Steganography Tool · Dual-Channel (R/B) + Pixel Shuffle
+  </footer>
+
+</div>
+
+<script>
+const DELIM = "##END##";
+
+// ───────── Util: bit <-> text ─────────
+function textToBits(str){
+  const bytes = new TextEncoder().encode(str);
+  const bits = [];
+  for (const b of bytes){
+    for (let i=7;i>=0;i--) bits.push((b>>i)&1);
+  }
+  return bits;
+}
+function bitsToText(bits){
+  const bytes = [];
+  for (let i=0;i<bits.length;i+=8){
+    let byte=0;
+    for (let j=0;j<8;j++) byte=(byte<<1)|(bits[i+j]||0);
+    bytes.push(byte);
+  }
+  try{ return new TextDecoder().decode(new Uint8Array(bytes)); }
+  catch(e){ return bytes.map(b=>String.fromCharCode(b)).join(''); }
+}
+
+// ───────── Mulberry32 seeded RNG (deterministik dari kunci) ─────────
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+}
+function getPixelOrder(nPixels, key){
+  const rng = mulberry32(key >>> 0);
+  const order = new Array(nPixels);
+  for (let i=0;i<nPixels;i++) order[i]=i;
+  // Fisher-Yates shuffle (deterministik berdasarkan seed)
+  for (let i=nPixels-1;i>0;i--){
+    const j = Math.floor(rng()*(i+1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
+}
+
+// ───────── PSNR ─────────
+function computePSNR(origData, stegoData){
+  let mse=0, mseR=0, mseG=0, mseB=0, n=origData.length/4;
+  for (let i=0;i<origData.length;i+=4){
+    const dr=origData[i]-stegoData[i];
+    const dg=origData[i+1]-stegoData[i+1];
+    const db=origData[i+2]-stegoData[i+2];
+    mseR+=dr*dr; mseG+=dg*dg; mseB+=db*db;
+  }
+  mseR/=n; mseG/=n; mseB/=n;
+  mse=(mseR+mseG+mseB)/3;
+  const toDb = m => m===0 ? Infinity : 10*Math.log10((255*255)/m);
+  return { total: toDb(mse), R: toDb(mseR), G: toDb(mseG), B: toDb(mseB) };
+}
+
+// ═══════════════ TABS ═══════════════
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
+  });
+});
+
+// ═══════════════ EMBEDDING STATE ═══════════════
+let coverImg = null;       // HTMLImageElement
+let coverCanvas = document.createElement('canvas');
+let coverCtx = coverCanvas.getContext('2d', {willReadFrequently:true});
+
+function setupDropzone(dzId, inputId, onFile){
+  const dz = document.getElementById(dzId);
+  const input = document.getElementById(inputId);
+  dz.addEventListener('click', ()=> input.click());
+  input.addEventListener('change', e=>{ if(e.target.files[0]) onFile(e.target.files[0]); });
+  ['dragenter','dragover'].forEach(evt=>{
+    dz.addEventListener(evt, e=>{ e.preventDefault(); dz.classList.add('dragover'); });
+  });
+  ['dragleave','drop'].forEach(evt=>{
+    dz.addEventListener(evt, e=>{ e.preventDefault(); dz.classList.remove('dragover'); });
+  });
+  dz.addEventListener('drop', e=>{
+    const f = e.dataTransfer.files[0];
+    if (f) onFile(f);
+  });
+}
+
+function loadCover(file){
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const img = new Image();
+    img.onload = ()=>{
+      if (img.width < 250 || img.height < 250){
+        document.getElementById('embedError').innerHTML =
+          `<div class="error-box">⚠ Gambar minimal 250×250 px. Gambar ini ${img.width}×${img.height} px.</div>`;
+        return;
+      }
+      document.getElementById('embedError').innerHTML = '';
+      coverImg = img;
+      coverCanvas.width = img.width;
+      coverCanvas.height = img.height;
+      coverCtx.drawImage(img,0,0);
+
+      document.getElementById('coverPreview').src = e.target.result;
+      document.getElementById('coverInfo').textContent = `${img.width}×${img.height} px — kapasitas ${img.width*img.height} bit`;
+      document.getElementById('coverPreviewRow').style.display='flex';
+      updateCapacityHint();
+      checkEmbedReady();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+setupDropzone('dropzone-cover','fileCover', loadCover);
+
+// Gambar contoh (gradien, dibuat langsung di canvas — tidak perlu file)
+document.getElementById('btnSampleImg').addEventListener('click', ()=>{
+  const w=300, h=300;
+  coverCanvas.width=w; coverCanvas.height=h;
+  const imgData = coverCtx.createImageData(w,h);
+  for (let y=0;y<h;y++){
+    for (let x=0;x<w;x++){
+      const idx = (y*w+x)*4;
+      imgData.data[idx]   = Math.floor(255*x/w);            // R
+      imgData.data[idx+1] = Math.floor(255*y/h);            // G
+      imgData.data[idx+2] = Math.floor(255*(x+y)/(w+h));    // B
+      imgData.data[idx+3] = 255;                              // A
+    }
+  }
+  coverCtx.putImageData(imgData,0,0);
+  coverImg = true; // flag bahwa cover sudah siap
+
+  document.getElementById('coverPreview').src = coverCanvas.toDataURL('image/png');
+  document.getElementById('coverInfo').textContent = `${w}×${h} px (gradien contoh) — kapasitas ${w*h} bit`;
+  document.getElementById('coverPreviewRow').style.display='flex';
+  document.getElementById('embedError').innerHTML = '';
+  updateCapacityHint();
+  checkEmbedReady();
+});
+
+function updateCapacityHint(){
+  const msg = document.getElementById('msgInput').value;
+  const bits = textToBits(msg + DELIM).length;
+  document.getElementById('bitCount').textContent = `${bits} bit (termasuk delimiter)`;
+  if (coverCanvas.width){
+    const cap = coverCanvas.width * coverCanvas.height;
+    const pct = (bits/cap*100).toFixed(3);
+    const over = bits > cap;
+    document.getElementById('capacityHint').innerHTML =
+      over ? `<span style="color:var(--danger)">melebihi kapasitas!</span>` : `${pct}% kapasitas terpakai`;
+  }
+}
+document.getElementById('msgInput').addEventListener('input', ()=>{ updateCapacityHint(); checkEmbedReady(); });
+document.getElementById('keyInput').addEventListener('input', checkEmbedReady);
+
+function checkEmbedReady(){
+  const hasMsg = document.getElementById('msgInput').value.trim().length>0;
+  const hasKey = document.getElementById('keyInput').value.trim().length>0;
+  const hasCover = !!coverImg;
+  let capOk = true;
+  if (hasCover && hasMsg){
+    const bits = textToBits(document.getElementById('msgInput').value + DELIM).length;
+    capOk = bits <= coverCanvas.width*coverCanvas.height;
+  }
+  document.getElementById('btnEmbed').disabled = !(hasMsg && hasKey && hasCover && capOk);
+}
+
+// ───────── Embedding Process ─────────
+document.getElementById('btnEmbed').addEventListener('click', ()=>{
+  const message = document.getElementById('msgInput').value;
+  const key = parseInt(document.getElementById('keyInput').value);
+
+  const w = coverCanvas.width, h = coverCanvas.height;
+  const origImageData = coverCtx.getImageData(0,0,w,h);
+  const origData = origImageData.data;            // Uint8ClampedArray RGBA
+  const stegoData = new Uint8ClampedArray(origData); // copy
+
+  const bits = textToBits(message + DELIM);
+  const nPix = w*h;
+  const order = getPixelOrder(nPix, key);
+
+  for (let idx=0; idx<bits.length; idx++){
+    const pixFlat = order[idx];
+    const bit = bits[idx];
+    const base = pixFlat*4; // RGBA stride
+
+    if (pixFlat % 2 === 1){
+      // piksel ganjil -> channel R (offset 0)
+      stegoData[base] = (stegoData[base] & 0xFE) | bit;
+    } else {
+      // piksel genap -> channel B (offset 2)
+      stegoData[base+2] = (stegoData[base+2] & 0xFE) | bit;
+    }
+  }
+
+  // Render ke canvas hasil
+  const stegoImageData = new ImageData(stegoData, w, h);
+  const canvasStego = document.getElementById('canvasStego');
+  canvasStego.width=w; canvasStego.height=h;
+  canvasStego.getContext('2d').putImageData(stegoImageData,0,0);
+
+  const canvasOrig = document.getElementById('canvasOrig');
+  canvasOrig.width=w; canvasOrig.height=h;
+  canvasOrig.getContext('2d').putImageData(origImageData,0,0);
+
+  // Diff image (diperbesar x50)
+  const diffData = new Uint8ClampedArray(origData.length);
+  for (let i=0;i<origData.length;i+=4){
+    diffData[i]   = Math.min(255, Math.abs(origData[i]-stegoData[i])*50);
+    diffData[i+1] = Math.min(255, Math.abs(origData[i+1]-stegoData[i+1])*50);
+    diffData[i+2] = Math.min(255, Math.abs(origData[i+2]-stegoData[i+2])*50);
+    diffData[i+3] = 255;
+  }
+  const canvasDiff = document.getElementById('canvasDiff');
+  canvasDiff.width=w; canvasDiff.height=h;
+  canvasDiff.getContext('2d').putImageData(new ImageData(diffData,w,h),0,0);
+
+  // PSNR
+  const psnr = computePSNR(origData, stegoData);
+  const fmt = v => v===Infinity ? '∞ dB' : v.toFixed(3)+' dB';
+  document.getElementById('psnrTotal').textContent = fmt(psnr.total);
+  document.getElementById('psnrR').textContent = fmt(psnr.R);
+  document.getElementById('psnrG').textContent = fmt(psnr.G);
+  document.getElementById('psnrB').textContent = fmt(psnr.B);
+
+  let verdictHtml;
+  if (psnr.total === Infinity){
+    verdictHtml = `<span class="badge badge-ok">✓ Gambar identik</span>`;
+  } else if (psnr.total > 40){
+    verdictHtml = `<span class="badge badge-ok">✓ PSNR &gt; 40 dB — perubahan tidak kasat mata</span>`;
+  } else if (psnr.total > 30){
+    verdictHtml = `<span class="badge badge-ok">PSNR 30–40 dB — perubahan kecil, masih diterima</span>`;
+  } else {
+    verdictHtml = `<span class="badge badge-bad">PSNR &lt; 30 dB — kurang ideal</span>`;
+  }
+  document.getElementById('psnrVerdict').innerHTML = verdictHtml;
+
+  document.getElementById('embedResult').classList.add('show');
+
+  // simpan untuk download
+  window._stegoCanvas = canvasStego;
+  window._comparisonReady = {canvasOrig, canvasStego, canvasDiff, w, h, psnr};
+});
+
+document.getElementById('btnDownloadStego').addEventListener('click', ()=>{
+  const canvas = window._stegoCanvas;
+  if (!canvas) return;
+  const link = document.createElement('a');
+  link.download = 'stego_image.png';
+  link.href = canvas.toDataURL('image/png'); // PNG = lossless, wajib untuk LSB
+  link.click();
+});
+
+document.getElementById('btnDownloadComparison').addEventListener('click', ()=>{
+  const d = window._comparisonReady;
+  if (!d) return;
+  const pad = 70;
+  const out = document.createElement('canvas');
+  out.width = d.w*3 + 40;
+  out.height = d.h + pad;
+  const ctx = out.getContext('2d');
+  ctx.fillStyle = '#0b0d12';
+  ctx.fillRect(0,0,out.width,out.height);
+  ctx.drawImage(d.canvasOrig, 0, 0);
+  ctx.drawImage(d.canvasStego, d.w+20, 0);
+  ctx.drawImage(d.canvasDiff, d.w*2+40, 0);
+  ctx.fillStyle = '#7df9c4';
+  ctx.font = '13px monospace';
+  const fmt = v => v===Infinity ? '∞' : v.toFixed(2);
+  ctx.fillText(`PSNR Total: ${fmt(d.psnr.total)} dB  |  R:${fmt(d.psnr.R)} G:${fmt(d.psnr.G)} B:${fmt(d.psnr.B)}`, 5, d.h+22);
+  ctx.fillStyle = '#8b91a3';
+  ctx.fillText('Original — Stego — Perbedaan (×50)  |  Sherly Angelina Zalukhu — 231112721', 5, d.h+44);
+
+  const link = document.createElement('a');
+  link.download = 'comparison.png';
+  link.href = out.toDataURL('image/png');
+  link.click();
+});
+
+// ═══════════════ EXTRACTION ═══════════════
+let stegoExtractCanvas = document.createElement('canvas');
+let stegoExtractCtx = stegoExtractCanvas.getContext('2d', {willReadFrequently:true});
+let stegoLoaded = false;
+
+function loadStego(file){
+  const isPngOrBmp = /image\/(png|bmp)/.test(file.type) || /\.(png|bmp)$/i.test(file.name);
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const img = new Image();
+    img.onload = ()=>{
+      stegoExtractCanvas.width = img.width;
+      stegoExtractCanvas.height = img.height;
+      stegoExtractCtx.drawImage(img,0,0);
+      stegoLoaded = true;
+
+      document.getElementById('stegoPreview').src = e.target.result;
+      document.getElementById('stegoInfo').textContent = `${img.width}×${img.height} px`;
+      document.getElementById('stegoPreviewRow').style.display='flex';
+
+      document.getElementById('extractError').innerHTML = isPngOrBmp ? '' :
+        `<div class="error-box">⚠ File ini bukan PNG/BMP. Format JPG/WebP bersifat lossy dan dapat MERUSAK bit LSB sehingga ekstraksi gagal.</div>`;
+      checkExtractReady();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+setupDropzone('dropzone-stego','fileStego', loadStego);
+
+document.getElementById('keyInputExtract').addEventListener('input', checkExtractReady);
+function checkExtractReady(){
+  const hasKey = document.getElementById('keyInputExtract').value.trim().length>0;
+  document.getElementById('btnExtract').disabled = !(stegoLoaded && hasKey);
+}
+
+document.getElementById('btnExtract').addEventListener('click', ()=>{
+  const key = parseInt(document.getElementById('keyInputExtract').value);
+  const w = stegoExtractCanvas.width, h = stegoExtractCanvas.height;
+  const data = stegoExtractCtx.getImageData(0,0,w,h).data;
+
+  const nPix = w*h;
+  const order = getPixelOrder(nPix, key);
+  const delimBits = textToBits(DELIM);
+
+  const bits = [];
+  let found = false;
+  for (let k=0;k<nPix;k++){
+    const pixFlat = order[k];
+    const base = pixFlat*4;
+    const bit = (pixFlat % 2 === 1) ? (data[base] & 1) : (data[base+2] & 1);
+    bits.push(bit);
+
+    if (bits.length >= delimBits.length){
+      let match = true;
+      const tail = bits.slice(bits.length-delimBits.length);
+      for (let i=0;i<delimBits.length;i++){ if (tail[i] !== delimBits[i]){ match=false; break; } }
+      if (match){ found = true; break; }
+    }
+  }
+
+  const fullText = bitsToText(bits);
+  let result;
+  if (found && fullText.includes(DELIM)){
+    result = fullText.substring(0, fullText.indexOf(DELIM));
+  } else {
+    result = "(Delimiter tidak ditemukan — kemungkinan kunci salah atau gambar tidak mengandung pesan dari aplikasi ini)";
+  }
+
+  document.getElementById('extractedMsg').textContent = result;
+  document.getElementById('extractResult').classList.add('show');
+});
+</script>
+</body>
+</html>
